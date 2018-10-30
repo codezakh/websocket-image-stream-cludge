@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import os
+import base64
 from threading import Lock
 from flask import Flask, render_template, session, request, url_for
 from flask_socketio import SocketIO, emit, join_room, leave_room, \
@@ -37,9 +38,16 @@ def frame_source_background_thread():
             key=frame_ordering
         )
     ) 
+    base_64_frame_envelope = "data:image/jpeg;charset=utf-8;base64,{b64_img_data}"
     for frame in cycler:
-        socketio.sleep(0.1)
-        socketio.emit('new_frame', {'data': frame}, namespace='/test')
+        socketio.sleep(0.033)
+        with open(frame, 'rb') as f:
+            swig = base64.b64encode(f.read()).decode('utf-8')
+            socketio.emit(
+                'new_frame',
+                {'data': base_64_frame_envelope.format(b64_img_data=swig)},
+                namespace='/test'
+            )
     # while True:
     #     socketio.sleep(10)
     #     count += 1
